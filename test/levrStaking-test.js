@@ -36,9 +36,7 @@ describe("LEVR Staking", function () {
         });
     });
 
-    it("Single investor should get all rewards", async function () {
-        console.log("In test 1");
-
+    it("single investor should get all rewards", async function () {
         const rewardsLevr = "1000000000000000000000000000";
         const testAccountLevr = "10000000000000000000000000";
         const rewardAmount = "100000000000000000000";
@@ -60,7 +58,6 @@ describe("LEVR Staking", function () {
         await levr.approve(stakingRewards.address, stakeAmount);
 
         // Stake
-        console.log("Stake levr");
         await stakingRewards.stake(stakeAmount, 30);
 
         // console.log(
@@ -83,51 +80,46 @@ describe("LEVR Staking", function () {
         // 300 days = 25920000
         await network.provider.send("evm_increaseTime", [7776000]); // 60*60*24*days
         await network.provider.send("evm_mine");
-        await network.provider.send("evm_mine");
 
-        console.log(
-            "Timestamp after: ",
-            await (
-                await web3.eth.getBlock("latest")
-            ).timestamp
-        );
+        // console.log(
+        //     "Timestamp after: ",
+        //     await (
+        //         await web3.eth.getBlock("latest")
+        //     ).timestamp
+        // );
 
-        console.log(
-            "Earned after time jump: ",
-            await stakingRewards.earned(testAccount.address)
-        );
+        // console.log(
+        //     "Earned after time jump: ",
+        //     await stakingRewards.earned(testAccount.address)
+        // );
 
-        // Claim
-        console.log(
-            "Balance before claim: ",
-            await levr.balanceOf(testAccount.address)
-        );
+        // console.log(
+        //     "Balance before claim: ",
+        //     await levr.balanceOf(testAccount.address)
+        // );
 
         //await stakingRewards.exit(testAccount.address);
+        // Claim Rewards
         await stakingRewards.getReward(testAccount.address);
 
         let testAccountRewardBalance = await levr.balanceOf(
             testAccount.address
         );
-        console.log("Balance after claim: ", testAccountRewardBalance);
+        // console.log("Balance after claim: ", testAccountRewardBalance);
 
-        let rewardRate = calcRewardRate("100000000000000000000", 90 * day);
-        let rewardPT = calcRewardPerToken(
-            rewardRate,
-            "10000000000000000000000000",
-            90 * day
-        );
+        let rewardRate = calcRewardRate(rewardAmount, 90 * day);
+        let rewardPT = calcRewardPerToken(rewardRate, stakeAmount, 90 * day);
 
         let calculatedRewardBalance = calcReward(rewardPT, stakeAmount);
-        console.log(rewardPT);
-        console.log("Calculated Earned: ", calculatedRewardBalance);
+        // console.log(rewardPT);
+        // console.log("Calculated Earned: ", calculatedRewardBalance);
 
         expect(calculatedRewardBalance.toString()).to.equal(
             testAccountRewardBalance.toString()
         );
     });
 
-    it("should not be able to set too big reward", async function () {
+    it("should not be able to set reward bigger than reward balance", async function () {
         await hre.network.provider.request({
             method: "hardhat_impersonateAccount",
             params: [accountToImpersonate],
@@ -156,6 +148,100 @@ describe("LEVR Staking", function () {
         ).to.be.revertedWith(
             "reverted with reason string 'Provided reward too high'"
         );
+    });
+
+    it("should not be able to exit before lockup period is over", async function () {
+        const rewardsLevr = "1000000000000000000000000000";
+        const testAccountLevr = "10000000000000000000000000";
+        const rewardAmount = "100000000000000000000";
+        const stakeAmount = "10000000000000000000000000";
+
+        day = 86400;
+
+        await hre.network.provider.request({
+            method: "hardhat_impersonateAccount",
+            params: [accountToImpersonate],
+        });
+        // admin has minting rights
+        const admin = await ethers.getSigner(accountToImpersonate);
+        // Mint to test account
+        await levr.connect(admin).mint(testAccount.address, testAccountLevr); //10M
+        // Mint to stakingRewards contract
+        await levr.connect(admin).mint(stakingRewards.address, rewardsLevr); //1000M
+
+        await levr.approve(stakingRewards.address, stakeAmount);
+
+        // Stake
+        await stakingRewards.stake(stakeAmount, 30);
+
+        let testAccountBalance = await levr
+            .balanceOf(testAccount.address)
+            .toString();
+
+        await stakingRewards.notifyRewardAmount(rewardAmount);
+
+        await network.provider.send("evm_increaseTime", [1 * day]); // 60*60*24*days
+        await network.provider.send("evm_mine");
+
+        await expect(
+            stakingRewards.exit(testAccount.address)
+        ).to.be.revertedWith(
+            "reverted with reason string 'staking period has not yet expired'"
+        );
+        testAccountBalance = BigNumber.from(
+            await levr.balanceOf(testAccount.address)
+        );
+        expect(testAccountBalance.toString()).equal("0");
+
+        await network.provider.send("evm_increaseTime", [1 * day]); // 60*60*24*days
+        await network.provider.send("evm_mine");
+
+        await expect(
+            stakingRewards.exit(testAccount.address)
+        ).to.be.revertedWith(
+            "reverted with reason string 'staking period has not yet expired'"
+        );
+        testAccountBalance = BigNumber.from(
+            await levr.balanceOf(testAccount.address)
+        );
+        expect(testAccountBalance.toString()).equal("0");
+
+        await network.provider.send("evm_increaseTime", [10 * day]); // 60*60*24*days
+        await network.provider.send("evm_mine");
+
+        await expect(
+            stakingRewards.exit(testAccount.address)
+        ).to.be.revertedWith(
+            "reverted with reason string 'staking period has not yet expired'"
+        );
+        testAccountBalance = BigNumber.from(
+            await levr.balanceOf(testAccount.address)
+        );
+        expect(testAccountBalance.toString()).equal("0");
+
+        await network.provider.send("evm_increaseTime", [10 * day]); // 60*60*24*days
+        await network.provider.send("evm_mine");
+
+        await expect(
+            stakingRewards.exit(testAccount.address)
+        ).to.be.revertedWith(
+            "reverted with reason string 'staking period has not yet expired'"
+        );
+        testAccountBalance = BigNumber.from(
+            await levr.balanceOf(testAccount.address)
+        );
+        expect(testAccountBalance.toString()).equal("0");
+
+        await network.provider.send("evm_increaseTime", [10 * day]); // 60*60*24*days
+        await network.provider.send("evm_mine");
+
+        await stakingRewards.exit(testAccount.address);
+
+        testAccountBalance = BigNumber.from(
+            await levr.balanceOf(testAccount.address)
+        );
+
+        expect(testAccountBalance.toString()).not.equal("0");
     });
 });
 
@@ -190,10 +276,10 @@ function calcRewardPerToken(_rewardRate, _totalStaked, _durationStaked) {
     return rewardRate.mul(durationStaked).mul(e18).div(totalStaked);
 }
 
-function calcReward(_rewardPerToken, _amount) {
+function calcReward(_rewardPerToken, _userAmount) {
     const rewardPerToken = BigNumber.from(_rewardPerToken);
-    const amount = BigNumber.from(_amount);
+    const userAmount = BigNumber.from(_userAmount);
     const e18 = BigNumber.from("1000000000000000000");
 
-    return _rewardPerToken.mul(amount).div(e18);
+    return rewardPerToken.mul(userAmount).div(e18);
 }

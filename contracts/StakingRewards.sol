@@ -65,7 +65,7 @@ contract StakingRewards is /* IStakingRewards, */ RewardsDistributionRecipient, 
         if (_totalSupply == 0) {
             return rewardPerTokenStored;
         }
-        console.log("Sol: RewardPerToken: ", lastTimeRewardApplicable().sub(lastUpdateTime).mul(rewardRate).mul(1e18).div(_totalSupply));
+        // console.log("Sol: RewardPerToken: ", lastTimeRewardApplicable().sub(lastUpdateTime).mul(rewardRate).mul(1e18).div(_totalSupply));
         return
             rewardPerTokenStored.add(
                 lastTimeRewardApplicable().sub(lastUpdateTime).mul(rewardRate).mul(1e18).div(_totalSupply)
@@ -155,7 +155,7 @@ contract StakingRewards is /* IStakingRewards, */ RewardsDistributionRecipient, 
             rewardRate = reward.add(leftover).div(rewardsDuration);
         }
 
-        console.log("Sol: rewardRate = ", rewardRate);
+        // console.log("Sol: rewardRate = ", rewardRate);
 
         // Ensure the provided reward amount is not more than the balance in the contract.
         // This keeps the reward rate in the right range, preventing overflows due to
