@@ -26,6 +26,8 @@ contract StakingRewards is /* IStakingRewards, */ RewardsDistributionRecipient, 
     uint256 public rewardsDuration = 90 days;
     uint256 public lastUpdateTime;
     uint256 public rewardPerTokenStored;
+    uint256 public lockupPeriod = 90 days;  // modified
+    bool public lockupEnabled = true;
 
     mapping(address => uint256) public userRewardPerTokenPaid;
     mapping(address => uint256) public rewards;
@@ -87,14 +89,17 @@ contract StakingRewards is /* IStakingRewards, */ RewardsDistributionRecipient, 
     {
         uint releaseDateTime = block.timestamp.add(_daysToLock * 1 days);
         lockupTimes[msg.sender] = Math.max(lockupTimes[msg.sender], releaseDateTime);
-        require(lockupTimes[msg.sender] >= block.timestamp.add(30 days), "Lockup period too short.");
+        require(lockupTimes[msg.sender] >= block.timestamp.add(lockupPeriod), "Lockup period too short.");
         _stake(_amount);
     }
 
     function exit(address receiver)
         external
     {
-        require(lockupTimes[msg.sender] < block.timestamp, "staking period has not yet expired");
+        if(lockupEnabled == true) 
+        {
+            require(lockupTimes[msg.sender] < block.timestamp, "staking period has not yet expired");
+        }
         _exit(receiver);
     }
 
@@ -185,6 +190,16 @@ contract StakingRewards is /* IStakingRewards, */ RewardsDistributionRecipient, 
         emit RewardsDurationUpdated(rewardsDuration);
     }
 
+    function setLockupPeriod(uint256 _lockupPeriod) external onlyOwner {    // modified
+        lockupPeriod = _lockupPeriod;
+        emit LockupPeriodUpdated(lockupPeriod);
+    }
+
+    function setLockupEnabled(bool _lockupEnabled) external onlyOwner {     // modified
+        lockupEnabled = _lockupEnabled;
+        emit LockupEnabledUpdated(lockupEnabled);
+    }
+
     /* ========== MODIFIERS ========== */
 
     modifier updateReward(address account) {
@@ -204,5 +219,7 @@ contract StakingRewards is /* IStakingRewards, */ RewardsDistributionRecipient, 
     event Withdrawn(address indexed user, uint256 amount);
     event RewardPaid(address indexed user, uint256 reward);
     event RewardsDurationUpdated(uint256 newDuration);
+    event LockupPeriodUpdated(uint256 newLockupPeriod); // modified
+    event LockupEnabledUpdated(bool newLockupEnabled);  // modified
     event Recovered(address token, uint256 amount);
 }
