@@ -5,7 +5,6 @@ import "openzeppelin-solidity/contracts/math/Math.sol";
 import "openzeppelin-solidity/contracts/token/ERC20/ERC20Detailed.sol";
 import "openzeppelin-solidity/contracts/token/ERC20/SafeERC20.sol";
 import "openzeppelin-solidity/contracts/utils/ReentrancyGuard.sol";
-import "hardhat/console.sol";
 
 // Inheritance
 import "./dependencies/IStakingRewards.sol";
@@ -67,7 +66,6 @@ contract StakingRewards is /* IStakingRewards, */ RewardsDistributionRecipient, 
         if (_totalSupply == 0) {
             return rewardPerTokenStored;
         }
-        // console.log("Sol: RewardPerToken: ", lastTimeRewardApplicable().sub(lastUpdateTime).mul(rewardRate).mul(1e18).div(_totalSupply));
         return
             rewardPerTokenStored.add(
                 lastTimeRewardApplicable().sub(lastUpdateTime).mul(rewardRate).mul(1e18).div(_totalSupply)
@@ -98,7 +96,7 @@ contract StakingRewards is /* IStakingRewards, */ RewardsDistributionRecipient, 
     {
         if(lockupEnabled == true) 
         {
-            require(lockupTimes[msg.sender] < block.timestamp, "staking period has not yet expired");
+            require(lockupTimes[receiver] < block.timestamp, "staking period has not yet expired");
         }
         _exit(receiver);
     }
@@ -121,7 +119,7 @@ contract StakingRewards is /* IStakingRewards, */ RewardsDistributionRecipient, 
         nonReentrant 
         updateReward(receiver) 
     {
-        require(lockupTimes[receiver] < block.timestamp, "staking period has not yet expired");
+        // require(lockupTimes[receiver] < block.timestamp, "staking period has not yet expired"); // modified, already checked in exit
         require(amount > 0, "Cannot withdraw 0");
         _totalSupply = _totalSupply.sub(amount);
         _balances[receiver] = _balances[receiver].sub(amount);
@@ -145,7 +143,7 @@ contract StakingRewards is /* IStakingRewards, */ RewardsDistributionRecipient, 
     function _exit(address receiver) 
         internal        // modified
     {
-        _withdraw(_balances[msg.sender], receiver);
+        _withdraw(_balances[receiver], receiver);
         getReward(receiver);
     }
 
@@ -159,8 +157,6 @@ contract StakingRewards is /* IStakingRewards, */ RewardsDistributionRecipient, 
             uint256 leftover = remaining.mul(rewardRate);
             rewardRate = reward.add(leftover).div(rewardsDuration);
         }
-
-        // console.log("Sol: rewardRate = ", rewardRate);
 
         // Ensure the provided reward amount is not more than the balance in the contract.
         // This keeps the reward rate in the right range, preventing overflows due to

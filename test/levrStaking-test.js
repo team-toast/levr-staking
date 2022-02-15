@@ -7,6 +7,7 @@ const accountToImpersonate = "0x20BD917E2fc207AC80a15b034B4dBAa296065216";
 
 let testAccount;
 let testAccount2;
+let testAccount3;
 
 describe("LEVR Staking", function () {
     beforeEach(async function () {
@@ -17,7 +18,7 @@ describe("LEVR Staking", function () {
         levr = await LEVR.attach(testLevrAddress);
 
         // Get test accounts
-        [testAccount, testAccount2] = await ethers.getSigners();
+        [testAccount, testAccount2, testAccount3] = await ethers.getSigners();
 
         // Deploy Sale
         StakingRewards = await hre.ethers.getContractFactory("StakingRewards");
@@ -59,7 +60,7 @@ describe("LEVR Staking", function () {
     //     await levr.approve(stakingRewards.address, stakeAmount);
 
     //     // Stake
-    //     await stakingRewards.stake(stakeAmount, 30);
+    //     await stakingRewards.stake(stakeAmount, 90);
 
     //     // console.log(
     //     //     "Timestamp before: ",
@@ -70,15 +71,6 @@ describe("LEVR Staking", function () {
 
     //     await stakingRewards.notifyRewardAmount(rewardAmount);
 
-    //     // 9999999999990000000
-    //     // 99999999999990000000
-
-    //     // 1 day    = 86400
-    //     // 7   days = 604800
-    //     // 14  days = 1209600
-    //     // 30  days = 2592000
-    //     // 90  days = 7776000
-    //     // 300 days = 25920000
     //     await network.provider.send("evm_increaseTime", [7776000]); // 60*60*24*days
     //     await network.provider.send("evm_mine");
 
@@ -173,7 +165,7 @@ describe("LEVR Staking", function () {
     //     await levr.approve(stakingRewards.address, stakeAmount);
 
     //     // Stake
-    //     await stakingRewards.stake(stakeAmount, 30);
+    //     await stakingRewards.stake(stakeAmount, 90);
 
     //     let testAccountBalance = await levr
     //         .balanceOf(testAccount.address)
@@ -207,7 +199,7 @@ describe("LEVR Staking", function () {
     //     );
     //     expect(testAccountBalance.toString()).equal("0");
 
-    //     await network.provider.send("evm_increaseTime", [10 * day]); // 60*60*24*days
+    //     await network.provider.send("evm_increaseTime", [30 * day]); // 60*60*24*days
     //     await network.provider.send("evm_mine");
 
     //     await expect(
@@ -220,7 +212,7 @@ describe("LEVR Staking", function () {
     //     );
     //     expect(testAccountBalance.toString()).equal("0");
 
-    //     await network.provider.send("evm_increaseTime", [10 * day]); // 60*60*24*days
+    //     await network.provider.send("evm_increaseTime", [30 * day]); // 60*60*24*days
     //     await network.provider.send("evm_mine");
 
     //     await expect(
@@ -233,7 +225,7 @@ describe("LEVR Staking", function () {
     //     );
     //     expect(testAccountBalance.toString()).equal("0");
 
-    //     await network.provider.send("evm_increaseTime", [10 * day]); // 60*60*24*days
+    //     await network.provider.send("evm_increaseTime", [30 * day]); // 60*60*24*days
     //     await network.provider.send("evm_mine");
 
     //     await stakingRewards.exit(testAccount.address);
@@ -245,14 +237,47 @@ describe("LEVR Staking", function () {
     //     expect(testAccountBalance.toString()).not.equal("0");
     // });
 
-    // it("integration test (Not complete)", async function () {
+    // it("Can change minimum lockup period", async function () {
     //     const rewardsLevr = "1000000000000000000000000000";
     //     const testAccountLevr = "10000000000000000000000000";
     //     const rewardAmount = "100000000000000000000";
-    //     const rewardAmount2 = "200000000000000000000";
     //     const stakeAmount = "10000000000000000000000000";
 
-    //     day = 86400;
+    //     let day = 86400;
+    //     let defaultLockupPeriod = (90 * day).toString();
+    //     let changeLockupPeriodTo = (30 * day).toString();
+
+    //     await hre.network.provider.request({
+    //         method: "hardhat_impersonateAccount",
+    //         params: [accountToImpersonate],
+    //     });
+
+    //     let minLockupPeriod = await stakingRewards.lockupPeriod();
+    //     console.log("min lockup time 1: ", minLockupPeriod);
+    //     expect(minLockupPeriod).to.equal(defaultLockupPeriod);
+
+    //     // Change minimum lockup time
+    //     const changeTX = await stakingRewards.setLockupPeriod(
+    //         changeLockupPeriodTo
+    //     );
+
+    //     minLockupPeriod = await stakingRewards.lockupPeriod();
+
+    //     expect(minLockupPeriod).to.equal(changeLockupPeriodTo);
+
+    //     // EVENTS
+    //     expect(changeTX)
+    //         .to.emit(stakingRewards, "LockupPeriodUpdated")
+    //         .withArgs("2592000");
+    // });
+
+    // it("Should be able to disable minimum lockup period", async function () {
+    //     const rewardsLevr = "1000000000000000000000000000";
+    //     const testAccountLevr = "10000000000000000000000000";
+    //     const rewardAmount = "100000000000000000000";
+    //     const stakeAmount = "10000000000000000000000000";
+
+    //     let day = 86400;
 
     //     await hre.network.provider.request({
     //         method: "hardhat_impersonateAccount",
@@ -276,56 +301,92 @@ describe("LEVR Staking", function () {
 
     //     await stakingRewards.notifyRewardAmount(rewardAmount);
 
-    //     await network.provider.send("evm_increaseTime", [90 * day]); // 60*60*24*days
+    //     await network.provider.send("evm_increaseTime", [30 * day]); // 60*60*24*days
     //     await network.provider.send("evm_mine");
 
-    //     //await stakingRewards.exit(testAccount.address);
-    //     // Claim Rewards
-    //     await stakingRewards.getReward(testAccount.address);
-
-    //     let testAccountRewardBalance = await levr.balanceOf(
-    //         testAccount.address
-    //     );
-    //     // console.log("Balance after claim: ", testAccountRewardBalance);
-
-    //     let rewardRate = calcRewardRate(rewardAmount, 90 * day);
-    //     let rewardPT = calcRewardPerToken(rewardRate, stakeAmount, 90 * day);
-
-    //     let calculatedRewardBalance = calcReward(rewardPT, stakeAmount);
-
-    //     expect(calculatedRewardBalance.toString()).to.equal(
-    //         testAccountRewardBalance.toString()
+    //     // Try to exit before lockup time expires
+    //     await expect(
+    //         stakingRewards.exit(testAccount.address)
+    //     ).to.be.revertedWith(
+    //         "reverted with reason string 'staking period has not yet expired'"
     //     );
 
-    //     await network.provider.send("evm_increaseTime", [10 * day]); // 60*60*24*days
-    //     await network.provider.send("evm_mine");
+    //     // Disable minimum lockup time
+    //     const disableTX = await stakingRewards.setLockupEnabled(false);
 
-    //     await stakingRewards.connect(testAccount2).stake(stakeAmount, 90);
+    //     // Exit
+    //     await stakingRewards.exit(testAccount.address);
 
-    //     await stakingRewards.notifyRewardAmount(rewardAmount2);
+    //     expect(await stakingRewards.lockupEnabled()).to.equal(false);
 
-    //     await network.provider.send("evm_increaseTime", [40 * day]); // 60*60*24*days
-    //     await network.provider.send("evm_mine");
+    //     // EVENTS
+    //     expect(disableTX)
+    //         .to.emit(stakingRewards, "LockupEnabledUpdated")
+    //         .withArgs(false);
+    // });
 
-    //     console.log(
-    //         "Account 1 earned: ",
-    //         await stakingRewards.earned(testAccount.address)
+    // it("Should select longer lockup period", async function () {
+    //     const rewardsLevr = "1000000000000000000000000000";
+    //     const testAccountLevr = "100000000000000000000000000";
+    //     const rewardAmount = "100000000000000000000";
+    //     const stakeAmount = "100000000000000000000000";
+
+    //     let day = 86400;
+
+    //     await hre.network.provider.request({
+    //         method: "hardhat_impersonateAccount",
+    //         params: [accountToImpersonate],
+    //     });
+    //     // admin has minting rights
+    //     const admin = await ethers.getSigner(accountToImpersonate);
+    //     // Mint to test account
+    //     await levr.connect(admin).mint(testAccount.address, testAccountLevr); //10M
+    //     await levr.connect(admin).mint(testAccount2.address, testAccountLevr); //10M
+    //     // Mint to stakingRewards contract
+    //     await levr.connect(admin).mint(stakingRewards.address, rewardsLevr); //1000M
+
+    //     await levr.approve(stakingRewards.address, testAccountLevr);
+    //     await levr
+    //         .connect(testAccount2)
+    //         .approve(stakingRewards.address, stakeAmount);
+
+    //     // Stake for 140 day period
+    //     await stakingRewards.stake(stakeAmount, 140);
+
+    //     // Stake for 120 day period
+    //     await stakingRewards.stake(stakeAmount, 120);
+
+    //     let currentTimestamp = await (
+    //         await web3.eth.getBlock("latest")
+    //     ).timestamp;
+
+    //     // Expect first longer period is selected
+    //     expect(await stakingRewards.lockupTimes(testAccount.address)).to.equal(
+    //         (Number(currentTimestamp) + 140 * day - 1).toString()
     //     );
-    //     console.log(
-    //         "Account 2 earned: ",
-    //         await stakingRewards.earned(testAccount2.address)
+
+    //     // Stake for 140 day period
+    //     await stakingRewards.stake(stakeAmount, 110);
+
+    //     // Stake for 120 day period
+    //     await stakingRewards.stake(stakeAmount, 150);
+
+    //     currentTimestamp = await (await web3.eth.getBlock("latest")).timestamp;
+
+    //     // Expect latest longer period is selected
+    //     expect(await stakingRewards.lockupTimes(testAccount.address)).to.equal(
+    //         (Number(currentTimestamp) + 150 * day).toString()
     //     );
     // });
 
-    it("Can change minimum lockup period", async function () {
-        const rewardsLevr = "1000000000000000000000000000";
-        const testAccountLevr = "10000000000000000000000000";
-        const rewardAmount = "100000000000000000000";
-        const stakeAmount = "10000000000000000000000000";
+    it("integration test", async function () {
+        const rewardsLevr = BigNumber.from("10000000000000000000000000000");
+        const testAccountLevr = BigNumber.from("100000000000000000000000000");
+        const rewardAmount = BigNumber.from("100000000000000000000");
+        const rewardAmount2 = BigNumber.from("200000000000000000000");
+        const stakeAmount = BigNumber.from("10000000000000000000000000");
 
-        let day = 86400;
-        let defaultLockupPeriod = (90 * day).toString();
-        let changeLockupPeriodTo = (30 * day).toString();
+        day = 86400;
 
         await hre.network.provider.request({
             method: "hardhat_impersonateAccount",
@@ -339,28 +400,106 @@ describe("LEVR Staking", function () {
         // Mint to stakingRewards contract
         await levr.connect(admin).mint(stakingRewards.address, rewardsLevr); //1000M
 
-        await levr.approve(stakingRewards.address, stakeAmount);
+        await levr.approve(stakingRewards.address, testAccountLevr);
         await levr
             .connect(testAccount2)
-            .approve(stakingRewards.address, stakeAmount);
+            .approve(stakingRewards.address, testAccountLevr);
 
-        let minLockupPeriod = await stakingRewards.lockupPeriod();
-        console.log("min lockup time 1: ", minLockupPeriod);
-        expect(minLockupPeriod).to.equal(defaultLockupPeriod);
+        let account1BalanceBefore = await levr.balanceOf(testAccount.address);
+        let account2BalanceBefore = await levr.balanceOf(testAccount2.address);
 
-        // Change minimum lockup time
-        const changeTX = await stakingRewards.setLockupPeriod(
-            changeLockupPeriodTo
+        // Stake period 1
+        await stakingRewards.setRewardsDuration(180 * day);
+
+        await stakingRewards.connect(testAccount2).stake(stakeAmount, 90);
+
+        await stakingRewards.notifyRewardAmount(rewardAmount);
+
+        await network.provider.send("evm_increaseTime", [180 * day]); // 60*60*24*days
+        await network.provider.send("evm_mine");
+
+        let account2EarnedPeriod1 = await stakingRewards.earned(
+            testAccount2.address
+        );
+        console.log(
+            "Account 2 earned: ",
+            await stakingRewards.earned(testAccount2.address)
         );
 
-        minLockupPeriod = await stakingRewards.lockupPeriod();
+        let rewardRate = calcRewardRate(rewardAmount, 180 * day);
+        let rewardPT = calcRewardPerToken(rewardRate, stakeAmount, 180 * day);
 
-        expect(minLockupPeriod).to.equal(changeLockupPeriodTo);
+        let calculatedRewards = calcReward(rewardPT, stakeAmount);
+        console.log("Calculated Earned: ", calculatedRewards);
 
-        // EVENTS
-        expect(changeTX)
-            .to.emit(stakingRewards, "LockupPeriodUpdated")
-            .withArgs("2592000");
+        expect(calculatedRewards.toString()).to.equal(account2EarnedPeriod1);
+
+        await stakingRewards
+            .connect(testAccount2)
+            .getReward(testAccount2.address);
+
+        // Stake period 2
+
+        //await stakingRewards.connect(testAccount2).stake(stakeAmount, 90);
+
+        await stakingRewards.stake(stakeAmount, 180);
+
+        await stakingRewards.notifyRewardAmount(rewardAmount);
+
+        await network.provider.send("evm_increaseTime", [90 * day]); // 60*60*24*days
+        await network.provider.send("evm_mine");
+
+        console.log(
+            "Account 2 earned: ",
+            await stakingRewards.earned(testAccount2.address)
+        );
+
+        let account2EarnedPeriod2 = await stakingRewards.earned(
+            testAccount2.address
+        );
+
+        let account1EarnedPeriod2 = await stakingRewards.earned(
+            testAccount.address
+        );
+
+        rewardPT = calcRewardPerToken(rewardRate, stakeAmount.mul(2), 90 * day);
+        console.log("rewardPT: ", rewardPT);
+        console.log(
+            "rewardPT stored: ",
+            await stakingRewards.rewardPerTokenStored()
+        );
+
+        calculatedRewards = calcReward(rewardPT, stakeAmount);
+        console.log("Calculated Earned: ", calculatedRewards);
+
+        expect(calculatedRewards.toString()).to.equal(account2EarnedPeriod2);
+        expect(calculatedRewards.toString()).to.equal(account1EarnedPeriod2);
+
+        // Stake period 3
+
+        await stakingRewards.exit(testAccount2.address); // account2 leaves
+
+        await network.provider.send("evm_increaseTime", [90 * day]); // 60*60*24*days
+        await network.provider.send("evm_mine");
+
+        let rewardsAccount1P3 = await stakingRewards.earned(
+            testAccount.address
+        );
+        console.log("Account 1 rewards P3: ", rewardsAccount1P3);
+
+        rewardPT = calcRewardPerToken(rewardRate, stakeAmount, 90 * day);
+        calculatedRewards = calculatedRewards.add(
+            calcReward(rewardPT, stakeAmount)
+        );
+
+        let errorPercentage =
+            (Math.abs(rewardsAccount1P3 - calculatedRewards) /
+                rewardsAccount1P3) *
+            100;
+
+        expect(errorPercentage).is.lessThan(0.1);
+
+        console.log("Error: ", errorPercentage);
     });
 });
 
