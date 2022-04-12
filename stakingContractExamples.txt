@@ -1,0 +1,13 @@
+Verox Staking (Audited):    https://etherscan.io/address/0x744612bd6c29301a99ef2b19393eb95080926003#code    
+                            https://solidity.finance/audits/VeroxStaking/
+                            18% APY
+
+Thales Staking (Audited):   https://github.com/thales-markets/contracts/blob/main/contracts/EscrowAndStaking/StakingThales.sol
+
+Cudos Staking (Audited):    https://github.com/CudoVentures/cudos-eth-staking-contract/blob/main/contracts/staking/StakingRewards.sol
+
+EasyStaking (Audited):      https://codesandbox.io/s/3zw22?file=/contracts/EasyStaking.sol
+                            Uses sigmoid reward function wrt time.
+
+PLE Staking (Audited):      https://solidity.finance/audits/PLE/
+                            Has 1 year staking period with 40% APY
